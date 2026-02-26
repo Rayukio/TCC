@@ -1,0 +1,96 @@
+.
+├── estrutura.txt
+├── iFix App UX Screens
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── README.md
+│   ├── src
+│   │   ├── App.tsx
+│   │   ├── ARQUITETURA_INTEGRADA.md
+│   │   ├── assets
+│   │   │   └── 9602d4631452c40a4f84b3fe07fc6befac3aa408.png
+│   │   ├── Attributions.md
+│   │   ├── components
+│   │   │   ├── AppointmentDetailScreen.tsx
+│   │   │   ├── BookingScreen.tsx
+│   │   │   ├── ChatScreen.tsx
+│   │   │   ├── figma
+│   │   │   │   └── ImageWithFallback.tsx
+│   │   │   ├── HomeScreen.tsx
+│   │   │   ├── OrderStatusController.tsx
+│   │   │   ├── OrderTimeline.tsx
+│   │   │   ├── ProfileScreen.tsx
+│   │   │   ├── RatingModal.tsx
+│   │   │   ├── SearchScreen.tsx
+│   │   │   ├── ServiceDetailHistoryScreen.tsx
+│   │   │   ├── ServiceHistoryScreen.tsx
+│   │   │   ├── SignUpScreen.tsx
+│   │   │   ├── TechnicianDetailScreen.tsx
+│   │   │   ├── TechnicianReputationCard.tsx
+│   │   │   ├── TrackingScreen.tsx
+│   │   │   ├── ui
+│   │   │   │   ├── accordion.tsx
+│   │   │   │   ├── alert-dialog.tsx
+│   │   │   │   ├── alert.tsx
+│   │   │   │   ├── aspect-ratio.tsx
+│   │   │   │   ├── avatar.tsx
+│   │   │   │   ├── badge.tsx
+│   │   │   │   ├── breadcrumb.tsx
+│   │   │   │   ├── button.tsx
+│   │   │   │   ├── calendar.tsx
+│   │   │   │   ├── card.tsx
+│   │   │   │   ├── carousel.tsx
+│   │   │   │   ├── chart.tsx
+│   │   │   │   ├── checkbox.tsx
+│   │   │   │   ├── collapsible.tsx
+│   │   │   │   ├── command.tsx
+│   │   │   │   ├── context-menu.tsx
+│   │   │   │   ├── dialog.tsx
+│   │   │   │   ├── drawer.tsx
+│   │   │   │   ├── dropdown-menu.tsx
+│   │   │   │   ├── form.tsx
+│   │   │   │   ├── hover-card.tsx
+│   │   │   │   ├── input-otp.tsx
+│   │   │   │   ├── input.tsx
+│   │   │   │   ├── label.tsx
+│   │   │   │   ├── menubar.tsx
+│   │   │   │   ├── navigation-menu.tsx
+│   │   │   │   ├── pagination.tsx
+│   │   │   │   ├── popover.tsx
+│   │   │   │   ├── progress.tsx
+│   │   │   │   ├── radio-group.tsx
+│   │   │   │   ├── resizable.tsx
+│   │   │   │   ├── scroll-area.tsx
+│   │   │   │   ├── select.tsx
+│   │   │   │   ├── separator.tsx
+│   │   │   │   ├── sheet.tsx
+│   │   │   │   ├── sidebar.tsx
+│   │   │   │   ├── skeleton.tsx
+│   │   │   │   ├── slider.tsx
+│   │   │   │   ├── sonner.tsx
+│   │   │   │   ├── switch.tsx
+│   │   │   │   ├── table.tsx
+│   │   │   │   ├── tabs.tsx
+│   │   │   │   ├── textarea.tsx
+│   │   │   │   ├── toggle-group.tsx
+│   │   │   │   ├── toggle.tsx
+│   │   │   │   ├── tooltip.tsx
+│   │   │   │   ├── use-mobile.ts
+│   │   │   │   └── utils.ts
+│   │   │   └── WelcomeScreen.tsx
+│   │   ├── contexts
+│   │   │   ├── OrderContext.tsx
+│   │   │   └── ReputationContext.tsx
+│   │   ├── guidelines
+│   │   │   └── Guidelines.md
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── SISTEMA_ESTADOS.md
+│   │   └── styles
+│   │       └── globals.css
+│   └── vite.config.ts
+├── package-lock.json
+└── README.md
+
+10 directories, 84 files
