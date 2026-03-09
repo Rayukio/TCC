@@ -90,7 +90,36 @@
 │   │   └── styles
 │   │       └── globals.css
 │   └── vite.config.ts
+├── ifix-backend
+│   ├── package.json
+│   ├── package-lock.json
+│   └── src
+│       ├── app.js
+│       ├── config
+│       │   └── database.js
+│       ├── controllers
+│       │   └── userController.js
+│       ├── middlewares
+│       │   ├── authMiddleware.js
+│       │   └── errorMiddleware.js
+│       ├── models
+│       │   ├── Appointment.js
+│       │   ├── Rating.js
+│       │   ├── Service.js
+│       │   ├── Technician.js
+│       │   └── User.js
+│       ├── routes
+│       │   ├── appointmentRoutes.js
+│       │   ├── chatRoutes.js
+│       │   ├── ratingRoutes.js
+│       │   ├── serviceRoutes.js
+│       │   ├── technicianRoutes.js
+│       │   └── userRoutes.js
+│       ├── server.js
+│       ├── services
+│       │   └── userService.js
+│       └── utils
 ├── package-lock.json
 └── README.md
 
-10 directories, 84 files
+19 directories, 104 files
