@@ -82,6 +82,7 @@
 │   │   ├── contexts
 │   │   │   ├── OrderContext.tsx
 │   │   │   └── ReputationContext.tsx
+│   │   ├── declarations.d.ts
 │   │   ├── guidelines
 │   │   │   └── Guidelines.md
 │   │   ├── index.css
@@ -140,4 +141,4 @@
 ├── package-lock.json
 └── README.md
 
-19 directories, 122 files
+19 directories, 123 files
