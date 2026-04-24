@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import * as React from "react";
+import { register } from "../services/auth";
 
 interface SignUpScreenProps {
   onBack: () => void;
@@ -8,6 +9,26 @@ interface SignUpScreenProps {
 
 export function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
   const [userType, setUserType] = React.useState<"client" | "technician">("client");
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+
+  const handleSubmit = async (e: React.SubmitEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await register({ name, email, password, phone });
+      onSignUp();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao cadastrar.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -49,15 +70,22 @@ export function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
           </div>
         </div>
 
+        {error && (
+          <p className="text-red-500 text-sm text-center mb-4">{error}</p>
+        )}
+
         {/* Form */}
-        <form onSubmit={(e) => { e.preventDefault(); onSignUp(); }} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[rgb(var(--color-text-secondary))] mb-2">
               Nome completo
             </label>
             <input
               type="text"
-              placeholder="name@example.com"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Seu nome completo"
+              required
               className="w-full px-4 py-3 bg-[rgb(var(--color-background))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary))]"
             />
           </div>
@@ -68,7 +96,10 @@ export function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             </label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
+              required
               className="w-full px-4 py-3 bg-[rgb(var(--color-background))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary))]"
             />
           </div>
@@ -79,6 +110,8 @@ export function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             </label>
             <input
               type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="(00) 00000-0000"
               className="w-full px-4 py-3 bg-[rgb(var(--color-background))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary))]"
             />
@@ -118,16 +151,20 @@ export function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
             </label>
             <input
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              required
               className="w-full px-4 py-3 bg-[rgb(var(--color-background))] rounded-xl focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary))]"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-[rgb(var(--color-primary))] text-white px-8 py-4 rounded-xl hover:bg-[rgb(var(--color-primary-dark))] transition-colors mt-8"
+            disabled={loading}
+            className="w-full bg-[rgb(var(--color-primary))] text-white px-8 py-4 rounded-xl hover:bg-[rgb(var(--color-primary-dark))] transition-colors mt-8 disabled:opacity-50"
           >
-            Cadastrar
+            {loading ? "Cadastrando..." : "Cadastrar"}
           </button>
         </form>
       </div>
