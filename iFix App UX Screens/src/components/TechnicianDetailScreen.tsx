@@ -1,28 +1,42 @@
 import { ArrowLeft, Star, MapPin, Award, Shield, Clock } from "lucide-react";
 import * as React from "react";
 import { useReputation } from "../contexts/ReputationContext";
-import { TechnicianReputationCard } from "./TechnicianReputationCard";
+import { getTechnicianById } from "../services/technicians";
+import type { Technician } from "../types/technician";
 
 interface TechnicianDetailScreenProps {
   onBack: () => void;
   onBookAppointment: () => void;
+  technicianId?: string;
 }
 
-export function TechnicianDetailScreen({ onBack, onBookAppointment }: TechnicianDetailScreenProps) {
+export function TechnicianDetailScreen({ onBack, onBookAppointment, technicianId }: TechnicianDetailScreenProps) {
   const { getTechnicianMetrics } = useReputation();
-  
-  const technician = {
-    id: "tech-1",
-    name: "Carlos Silva",
-    specialty: "Manutenção de computação",
-    rating: 4.9,
-    reviews: 189,
-    experience: "5 anos",
-    completedServices: 450,
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
-  };
+  const [technician, setTechnician] = React.useState<Technician | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
 
-  const metrics = getTechnicianMetrics(technician.id);
+  React.useEffect(() => {
+    if (!technicianId) {
+      setLoading(false);
+      return;
+    }
+    const fetch = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getTechnicianById(technicianId);
+        setTechnician(data);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Erro ao carregar técnico.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [technicianId]);
+
+  const metrics = technicianId ? getTechnicianMetrics(technicianId) : null;
 
   const services = [
     { name: "Formatação de computador", price: "R$ 80", duration: "1-2h" },
@@ -32,21 +46,26 @@ export function TechnicianDetailScreen({ onBack, onBookAppointment }: Technician
   ];
 
   const reviews = [
-    {
-      id: 1,
-      name: "Ana Paula",
-      rating: 5,
-      date: "Há 2 dias",
-      comment: "Excelente profissional! Muito atencioso e resolveu meu problema rapidamente.",
-    },
-    {
-      id: 2,
-      name: "João Pedro",
-      rating: 5,
-      date: "Há 1 semana",
-      comment: "Serviço de qualidade, recomendo!",
-    },
+    { id: 1, name: "Ana Paula", rating: 5, date: "Há 2 dias", comment: "Excelente profissional! Muito atencioso e resolveu meu problema rapidamente." },
+    { id: 2, name: "João Pedro", rating: 5, date: "Há 1 semana", comment: "Serviço de qualidade, recomendo!" },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--color-background))]">
+        <p className="text-[rgb(var(--color-text-muted))]">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (error || !technician) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[rgb(var(--color-background))] gap-4">
+        <p className="text-red-500">{error || "Técnico não encontrado."}</p>
+        <button onClick={onBack} className="text-[rgb(var(--color-primary))]">Voltar</button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[rgb(var(--color-background))] pb-32">
@@ -65,23 +84,26 @@ export function TechnicianDetailScreen({ onBack, onBookAppointment }: Technician
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex items-start gap-4 mb-6">
             <img
-              src={technician.avatar}
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${technician.name}`}
               alt={technician.name}
               className="w-20 h-20 rounded-full object-cover bg-[rgb(var(--color-primary-light))]"
             />
             <div className="flex-1">
               <h3 className="text-[rgb(var(--color-secondary))] mb-1">{technician.name}</h3>
-              <p className="text-[rgb(var(--color-text-secondary))] mb-3">{technician.specialty}</p>
-              <div className="flex items-center gap-1 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-5 h-5 fill-[rgb(var(--color-warning))] text-[rgb(var(--color-warning))]"
-                  />
-                ))}
-                <span className="text-[rgb(var(--color-text-primary))] ml-2">{technician.rating}</span>
-                <span className="text-[rgb(var(--color-text-muted))]">({technician.reviews} avaliações)</span>
-              </div>
+              <p className="text-[rgb(var(--color-text-secondary))] mb-3">
+                {technician.specialties?.join(", ") ?? "—"}
+              </p>
+              {technician.rating !== undefined && (
+                <div className="flex items-center gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-[rgb(var(--color-warning))] text-[rgb(var(--color-warning))]" />
+                  ))}
+                  <span className="text-[rgb(var(--color-text-primary))] ml-2">{technician.rating}</span>
+                </div>
+              )}
+              {technician.bio && (
+                <p className="text-[rgb(var(--color-text-muted))]">{technician.bio}</p>
+              )}
             </div>
             <div className="flex flex-col items-center gap-1">
               <div className="w-12 h-12 rounded-full bg-[rgb(var(--color-success))]/10 flex items-center justify-center">
@@ -94,16 +116,22 @@ export function TechnicianDetailScreen({ onBack, onBookAppointment }: Technician
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[rgb(var(--color-border))]">
             <div className="text-center">
-              <p className="text-[rgb(var(--color-primary))]">{technician.experience}</p>
-              <p className="text-[rgb(var(--color-text-muted))]">Experiência</p>
+              <p className="text-[rgb(var(--color-primary))]">
+                {metrics?.completionRate ? `${metrics.completionRate}%` : "—"}
+              </p>
+              <p className="text-[rgb(var(--color-text-muted))]">Conclusão</p>
             </div>
             <div className="text-center">
-              <p className="text-[rgb(var(--color-primary))]">{technician.completedServices}</p>
+              <p className="text-[rgb(var(--color-primary))]">
+                {metrics?.totalServices ?? "—"}
+              </p>
               <p className="text-[rgb(var(--color-text-muted))]">Serviços</p>
             </div>
             <div className="text-center">
-              <p className="text-[rgb(var(--color-primary))]">2.3 km</p>
-              <p className="text-[rgb(var(--color-text-muted))]">Distância</p>
+              <p className="text-[rgb(var(--color-primary))]">
+                {technician.city ?? "—"}
+              </p>
+              <p className="text-[rgb(var(--color-text-muted))]">Cidade</p>
             </div>
           </div>
         </div>
@@ -155,14 +183,7 @@ export function TechnicianDetailScreen({ onBack, onBookAppointment }: Technician
                 </div>
                 <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < review.rating
-                          ? "fill-[rgb(var(--color-warning))] text-[rgb(var(--color-warning))]"
-                          : "text-[rgb(var(--color-border))]"
-                      }`}
-                    />
+                    <Star key={i} className={`w-4 h-4 ${i < review.rating ? "fill-[rgb(var(--color-warning))] text-[rgb(var(--color-warning))]" : "text-[rgb(var(--color-border))]"}`} />
                   ))}
                 </div>
                 <p className="text-[rgb(var(--color-text-secondary))]">{review.comment}</p>
