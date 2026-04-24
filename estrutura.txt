@@ -87,9 +87,16 @@
 │   │   │   └── Guidelines.md
 │   │   ├── index.css
 │   │   ├── main.tsx
+│   │   ├── services
+│   │   │   ├── api.ts
+│   │   │   ├── auth.ts
+│   │   │   └── technicians.ts
 │   │   ├── SISTEMA_ESTADOS.md
-│   │   └── styles
-│   │       └── globals.css
+│   │   ├── styles
+│   │   │   └── globals.css
+│   │   └── types
+│   │       ├── technician.ts
+│   │       └── user.ts
 │   ├── tsconfig.json
 │   ├── tsconfig.node.json
 │   └── vite.config.ts
@@ -141,4 +148,4 @@
 ├── package-lock.json
 └── README.md
 
-19 directories, 123 files
+21 directories, 128 files
