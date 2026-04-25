@@ -1,10 +1,10 @@
-const User = require('../models/User');
+const { User } = require('../models');
 const { hashPassword, comparePassword } = require('../utils/hash');
 const { generateToken } = require('../utils/token');
 const { validateEmail, validatePassword } = require('../utils/validators');
 
 const register = async ({ name, email, password, phone }) => {
-  if (!validateEmail(email)) throw { status: 400, message: 'E-mail inválido.' };
+  if (!validateEmail(email))       throw { status: 400, message: 'E-mail inválido.' };
   if (!validatePassword(password)) throw { status: 400, message: 'Senha deve ter ao menos 8 caracteres, com letras e números.' };
 
   const existing = await User.findOne({ where: { email } });

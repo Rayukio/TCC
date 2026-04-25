@@ -9,74 +9,77 @@ const register = async (req, res, next) => {
     }
     const result = await technicianService.register({ name, email, password, phone, specialties, bio });
     res.status(201).json(result);
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 };
 
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
-    }
+    if (!email || !password) return res.status(400).json({ error: 'E-mail e senha são obrigatórios.' });
     const result = await technicianService.login({ email, password });
     res.json(result);
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 };
 
 const getProfile = async (req, res, next) => {
   try {
-    const technician = await technicianService.getById(req.user.id);
-    res.json(technician);
-  } catch (err) {
-    next(err);
-  }
+    res.json(await technicianService.getById(req.user.id));
+  } catch (err) { next(err); }
 };
 
 const getById = async (req, res, next) => {
   try {
-    const technician = await technicianService.getById(req.params.id);
-    res.json(technician);
-  } catch (err) {
-    next(err);
-  }
+    res.json(await technicianService.getById(req.params.id));
+  } catch (err) { next(err); }
 };
 
 const updateProfile = async (req, res, next) => {
   try {
-    const technician = await technicianService.updateProfile(req.user.id, req.body);
-    res.json(technician);
-  } catch (err) {
-    next(err);
-  }
+    res.json(await technicianService.updateProfile(req.user.id, req.body));
+  } catch (err) { next(err); }
 };
 
 const search = async (req, res, next) => {
   try {
-    const { category, city, available } = req.query;
-    const technicians = await technicianService.search({ category, city, available });
-    res.json(technicians);
-  } catch (err) {
-    next(err);
-  }
+    const { serviceId, category, city, available } = req.query;
+    res.json(await technicianService.search({ serviceId, category, city, available }));
+  } catch (err) { next(err); }
 };
 
 const match = async (req, res, next) => {
   try {
-    const { category, lat, lng, maxResults } = req.query;
-    const results = await matchingService.findMatches({
+    const { serviceId, category, lat, lng, maxResults } = req.query;
+    res.json(await matchingService.findMatches({
+      serviceId,
       category,
-      lat: lat ? parseFloat(lat) : null,
-      lng: lng ? parseFloat(lng) : null,
-      maxResults: maxResults ? parseInt(maxResults) : 10,
-    });
-    res.json(results);
-  } catch (err) {
-    next(err);
-  }
+      lat:        lat        ? parseFloat(lat)        : null,
+      lng:        lng        ? parseFloat(lng)        : null,
+      maxResults: maxResults ? parseInt(maxResults)   : 10,
+    }));
+  } catch (err) { next(err); }
 };
 
-module.exports = { register, login, getProfile, getById, updateProfile, search, match };
+// Gerenciamento dos serviços do técnico
+const addService = async (req, res, next) => {
+  try {
+    const { serviceId, price } = req.body;
+    if (!serviceId) return res.status(400).json({ error: 'serviceId é obrigatório.' });
+    const record = await technicianService.addService(req.user.id, { serviceId, price });
+    res.status(201).json(record);
+  } catch (err) { next(err); }
+};
+
+const removeService = async (req, res, next) => {
+  try {
+    await technicianService.removeService(req.user.id, req.params.serviceId);
+    res.status(204).send();
+  } catch (err) { next(err); }
+};
+
+const listMyServices = async (req, res, next) => {
+  try {
+    res.json(await technicianService.listMyServices(req.user.id));
+  } catch (err) { next(err); }
+};
+
+module.exports = { register, login, getProfile, getById, updateProfile, search, match, addService, removeService, listMyServices };

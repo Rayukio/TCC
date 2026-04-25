@@ -1,6 +1,4 @@
-const Rating = require('../models/Rating');
-const Appointment = require('../models/Appointment');
-const Technician = require('../models/Technician');
+const { Rating, Appointment, Technician } = require('../models');
 const { validateScore } = require('../utils/validators');
 
 const create = async ({ appointmentId, userId, score, comment, tags }) => {
@@ -23,7 +21,6 @@ const create = async ({ appointmentId, userId, score, comment, tags }) => {
     tags: tags || [],
   });
 
-  // Recalculate technician average
   await recalculateTechnicianRating(appointment.technicianId);
 
   return rating;

@@ -1,46 +1,48 @@
-// In-memory chat store (replace with DB/Redis in production)
-const chats = new Map(); // key: `${userId}_${technicianId}_${appointmentId}`
+const { Chat, Message } = require('../models');
 
-const getChatKey = (appointmentId) => `chat_${appointmentId}`;
-
-const getMessages = async (appointmentId) => {
-  const key = getChatKey(appointmentId);
-  return chats.get(key) || [];
+const getOrCreateChat = async (appointmentId) => {
+  const [chat] = await Chat.findOrCreate({ where: { appointmentId } });
+  return chat;
 };
 
-const sendMessage = async ({ appointmentId, senderId, senderRole, content }) => {
-  if (!content || !content.trim()) throw { status: 400, message: 'Mensagem não pode ser vazia.' };
+const getMessages = async (appointmentId) => {
+  const chat = await getOrCreateChat(appointmentId);
+  return Message.findAll({
+    where: { chatId: chat.id },
+    order: [['createdAt', 'ASC']],
+  });
+};
 
-  const key = getChatKey(appointmentId);
-  const messages = chats.get(key) || [];
+const sendMessage = async ({ appointmentId, senderId, senderRole, content, imageUrl }) => {
+  if (!content?.trim() && !imageUrl) {
+    throw { status: 400, message: 'Mensagem não pode ser vazia.' };
+  }
 
-  const message = {
-    id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    appointmentId,
+  const chat = await getOrCreateChat(appointmentId);
+
+  const message = await Message.create({
+    chatId:     chat.id,
+    senderType: senderRole, // 'user' | 'technician'
     senderId,
-    senderRole, // 'user' | 'technician'
-    content: content.trim(),
-    createdAt: new Date().toISOString(),
-    read: false,
-  };
-
-  messages.push(message);
-  chats.set(key, messages);
+    message:    content?.trim() || '',
+    imageUrl:   imageUrl || null,
+  });
 
   return message;
 };
 
 const markAsRead = async (appointmentId, readerRole) => {
-  const key = getChatKey(appointmentId);
-  const messages = chats.get(key) || [];
-  const otherRole = readerRole === 'user' ? 'technician' : 'user';
+  const chat = await Chat.findOne({ where: { appointmentId } });
+  if (!chat) return { marked: 0 };
 
-  const updated = messages.map((m) =>
-    m.senderRole === otherRole ? { ...m, read: true } : m
+  const otherType = readerRole === 'user' ? 'technician' : 'user';
+
+  const [count] = await Message.update(
+    { read: true },
+    { where: { chatId: chat.id, senderType: otherType, read: false } }
   );
 
-  chats.set(key, updated);
-  return { marked: updated.filter((m) => m.senderRole === otherRole).length };
+  return { marked: count };
 };
 
 module.exports = { getMessages, sendMessage, markAsRead };

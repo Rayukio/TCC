@@ -22,6 +22,10 @@ const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected successfully.');
+
+    // Importa após autenticação para garantir que sequelize já está pronto
+    require('../models/index');
+
     await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
     console.log('✅ Models synchronized.');
   } catch (error) {
