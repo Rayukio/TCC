@@ -119,9 +119,13 @@
 │       │   └── errorMiddleware.js
 │       ├── models
 │       │   ├── Appointment.js
+│       │   ├── Chat.js
+│       │   ├── Index.js
+│       │   ├── Message.js
 │       │   ├── Rating.js
 │       │   ├── Service.js
 │       │   ├── Technician.js
+│       │   ├── TechnicianService.js
 │       │   └── User.js
 │       ├── routes
 │       │   ├── appointmentRoutes.js
@@ -148,4 +152,4 @@
 ├── package-lock.json
 └── README.md
 
-21 directories, 128 files
+21 directories, 132 files
