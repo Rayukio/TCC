@@ -1,5 +1,8 @@
 import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
 import * as React from "react";
+import { createAppointment } from "../services/appointments";
+import { getTechnicianById } from "../services/technicians";
+import type { Technician } from "../types/technician";
 
 interface BookingScreenProps {
   onBack: () => void;
@@ -7,18 +10,27 @@ interface BookingScreenProps {
   technicianId?: string;
 }
 
-export function BookingScreen({ onBack, onConfirm }: BookingScreenProps) {
+export function BookingScreen({ onBack, onConfirm, technicianId }: BookingScreenProps) {
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
   const [selectedService, setSelectedService] = React.useState<string | null>(null);
+  const [address, setAddress] = React.useState("Rua Exemplo, 123 - São Paulo");
   const [location, setLocation] = React.useState("home");
+  const [technician, setTechnician] = React.useState<Technician | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  React.useEffect(() => {
+    if (!technicianId) return;
+    getTechnicianById(technicianId).then(setTechnician).catch(() => {});
+  }, [technicianId]);
 
   const availableDates = [
-    { day: "Hoje", date: "25/11", available: true },
-    { day: "Amanhã", date: "26/11", available: true },
-    { day: "Qui", date: "27/11", available: true },
-    { day: "Sex", date: "28/11", available: true },
-    { day: "Sáb", date: "29/11", available: false },
+    { day: "Hoje", date: "25/11", iso: new Date().toISOString(), available: true },
+    { day: "Amanhã", date: "26/11", iso: new Date(Date.now() + 86400000).toISOString(), available: true },
+    { day: "Qui", date: "27/11", iso: new Date(Date.now() + 2 * 86400000).toISOString(), available: true },
+    { day: "Sex", date: "28/11", iso: new Date(Date.now() + 3 * 86400000).toISOString(), available: true },
+    { day: "Sáb", date: "29/11", iso: new Date(Date.now() + 4 * 86400000).toISOString(), available: false },
   ];
 
   const availableTimes = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
@@ -30,8 +42,36 @@ export function BookingScreen({ onBack, onConfirm }: BookingScreenProps) {
     { id: "hd", name: "Troca de HD/SSD", price: "R$ 120" },
   ];
 
-  const technician = { name: "Carlos Silva", specialty: "Manutenção de computação", rating: 4.9 };
   const canConfirm = selectedDate && selectedTime && selectedService;
+
+  const handleConfirm = async () => {
+    if (!canConfirm || !technicianId) { onConfirm(); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const dateObj = availableDates.find(d => d.date === selectedDate);
+      const [hour, minute] = selectedTime!.split(":");
+      const scheduledAt = new Date(dateObj!.iso);
+      scheduledAt.setHours(parseInt(hour), parseInt(minute), 0, 0);
+
+      await createAppointment({
+        technicianId,
+        serviceId: selectedService!,
+        scheduledAt: scheduledAt.toISOString(),
+        address: location === "home" ? address : "Oficina do técnico",
+        paymentMethod: "cash",
+      });
+      onConfirm();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao criar agendamento.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const techName = technician?.name ?? "Técnico";
+  const techSpecialty = technician?.specialties?.join(", ") ?? "";
+  const techRating = technician?.rating ?? "—";
 
   return (
     <div className="min-h-screen bg-[rgb(var(--color-background))] pb-32">
@@ -45,6 +85,8 @@ export function BookingScreen({ onBack, onConfirm }: BookingScreenProps) {
       </div>
 
       <div className="px-6 py-6">
+        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+
         <div className="mb-6">
           <h3 className="text-[rgb(var(--color-secondary))] mb-3">Escolha o serviço</h3>
           <div className="space-y-2">
@@ -103,7 +145,7 @@ export function BookingScreen({ onBack, onConfirm }: BookingScreenProps) {
               <button onClick={() => setLocation("home")}
                 className={`w-full p-4 rounded-xl text-left transition-all ${location === "home" ? "bg-[rgb(var(--color-primary))] text-white shadow-md" : "bg-white text-[rgb(var(--color-text-primary))] shadow-sm"}`}>
                 <p className="mb-1">Minha residência</p>
-                <p className={location === "home" ? "text-white/80" : "text-[rgb(var(--color-text-muted))]"}>Rua Exemplo, 123 - São Paulo</p>
+                <p className={location === "home" ? "text-white/80" : "text-[rgb(var(--color-text-muted))]"}>{address}</p>
               </button>
               <button onClick={() => setLocation("shop")}
                 className={`w-full p-4 rounded-xl text-left transition-all ${location === "shop" ? "bg-[rgb(var(--color-primary))] text-white shadow-md" : "bg-white text-[rgb(var(--color-text-primary))] shadow-sm"}`}>
@@ -118,14 +160,14 @@ export function BookingScreen({ onBack, onConfirm }: BookingScreenProps) {
             <h3 className="text-[rgb(var(--color-secondary))] mb-4">Resumo do agendamento</h3>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-[rgb(var(--color-primary-light))] flex items-center justify-center">
-                <span className="text-[rgb(var(--color-primary-dark))]">CS</span>
+                <span className="text-[rgb(var(--color-primary-dark))]">{techName.slice(0,2).toUpperCase()}</span>
               </div>
               <div>
-                <h4 className="text-[rgb(var(--color-text-primary))]">{technician.name}</h4>
-                <p className="text-[rgb(var(--color-text-secondary))]">{technician.specialty}</p>
+                <h4 className="text-[rgb(var(--color-text-primary))]">{techName}</h4>
+                <p className="text-[rgb(var(--color-text-secondary))]">{techSpecialty}</p>
                 <div className="flex items-center gap-1">
                   <span className="text-[rgb(var(--color-warning))]">★</span>
-                  <span className="text-[rgb(var(--color-text-secondary))]">{technician.rating}</span>
+                  <span className="text-[rgb(var(--color-text-secondary))]">{techRating}</span>
                 </div>
               </div>
             </div>
@@ -149,9 +191,9 @@ export function BookingScreen({ onBack, onConfirm }: BookingScreenProps) {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[rgb(var(--color-border))] px-6 py-4">
-        <button onClick={onConfirm} disabled={!canConfirm}
+        <button onClick={handleConfirm} disabled={!canConfirm || loading}
           className="w-full bg-[rgb(var(--color-primary))] text-white px-8 py-4 rounded-xl hover:bg-[rgb(var(--color-primary-dark))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
-          Confirmar Agendamento
+          {loading ? "Agendando..." : "Confirmar Agendamento"}
         </button>
       </div>
     </div>
