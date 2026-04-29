@@ -81,7 +81,12 @@ export function ChatScreen({ onBack }: ChatScreenProps) {
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                handleSend()
+              }
+            }}
             placeholder="Digite uma mensagem..."
             className="flex-1 px-4 py-3 bg-[rgb(var(--color-background))] rounded-full focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary))]"
           />
