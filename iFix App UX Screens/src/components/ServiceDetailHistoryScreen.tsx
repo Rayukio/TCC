@@ -2,6 +2,7 @@ import { ArrowLeft, Calendar, Star, MapPin, Clock, Download, Share2 } from "luci
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 interface ServiceDetailHistoryScreenProps {
+  appointmentId?: string;
   onBack: () => void;
 }
 

@@ -14,12 +14,12 @@ import { AppointmentDetailScreen } from "./components/AppointmentDetailScreen";
 import { OrderProvider } from "./contexts/OrderContext";
 import { ReputationProvider, useReputation } from "./contexts/ReputationContext";
 
-type Screen = 
-  | "welcome" 
-  | "signup" 
-  | "home" 
-  | "search" 
-  | "technician-detail" 
+type Screen =
+  | "welcome"
+  | "signup"
+  | "home"
+  | "search"
+  | "technician-detail"
   | "booking"
   | "appointment-detail"
   | "profile"
@@ -30,8 +30,9 @@ type Screen =
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = React.useState<Screen>("welcome");
+  const [selectedTechnicianId, setSelectedTechnicianId] = React.useState<string | undefined>();
+  const [selectedAppointmentId, setSelectedAppointmentId] = React.useState<string | undefined>();
 
-  // Expose navigation function for profile menu
   React.useEffect(() => {
     (window as any).handleProfileAction = (action: string) => {
       if (action === "appointments") {
@@ -62,12 +63,16 @@ export default function App() {
         return (
           <SearchScreen
             onBack={() => setCurrentScreen("home")}
-            onSelectTechnician={() => setCurrentScreen("technician-detail")}
+            onSelectTechnician={(id: string) => {
+              setSelectedTechnicianId(id);
+              setCurrentScreen("technician-detail");
+            }}
           />
         );
       case "technician-detail":
         return (
           <TechnicianDetailScreen
+            technicianId={selectedTechnicianId}
             onBack={() => setCurrentScreen("search")}
             onBookAppointment={() => setCurrentScreen("booking")}
           />
@@ -75,6 +80,7 @@ export default function App() {
       case "booking":
         return (
           <BookingScreen
+            technicianId={selectedTechnicianId}
             onBack={() => setCurrentScreen("technician-detail")}
             onConfirm={() => setCurrentScreen("home")}
           />
@@ -82,16 +88,23 @@ export default function App() {
       case "appointment-detail":
         return (
           <AppointmentDetailScreen
+            appointmentId={selectedAppointmentId}
             onBack={() => setCurrentScreen("home")}
             onTrack={() => setCurrentScreen("tracking")}
             onChat={() => setCurrentScreen("chat")}
           />
         );
       case "chat":
-        return <ChatScreen onBack={() => setCurrentScreen("appointment-detail")} />;
+        return (
+          <ChatScreen
+            appointmentId={selectedAppointmentId}
+            onBack={() => setCurrentScreen("appointment-detail")}
+          />
+        );
       case "tracking":
         return (
           <TrackingScreen
+            appointmentId={selectedAppointmentId}
             onBack={() => setCurrentScreen("appointment-detail")}
             onOpenChat={() => setCurrentScreen("chat")}
           />
@@ -100,12 +113,16 @@ export default function App() {
         return (
           <ServiceHistoryScreen
             onBack={() => setCurrentScreen("profile")}
-            onSelectService={() => setCurrentScreen("service-detail-history")}
+            onSelectService={(id: string) => {
+              setSelectedAppointmentId(id);
+              setCurrentScreen("service-detail-history");
+            }}
           />
         );
       case "service-detail-history":
         return (
           <ServiceDetailHistoryScreen
+            appointmentId={selectedAppointmentId}
             onBack={() => setCurrentScreen("service-history")}
           />
         );
@@ -127,7 +144,6 @@ export default function App() {
   function AppContent() {
     const { updateMetricsOnStateChange, applyRating } = useReputation();
 
-    // Listener para mudanças de estado
     React.useEffect(() => {
       const handleStatusChange = (event: any) => {
         const { orderId, technicianId, oldStatus, newStatus } = event.detail;
