@@ -1,40 +1,65 @@
 import { ArrowLeft, Send, Paperclip, Image as ImageIcon, Phone, Video } from "lucide-react";
 import * as React from "react";
+import { getMessages, sendMessage, markAsRead } from "../services/chatService";
+import { getStoredUser } from "../services/auth";
+import type { Message } from "../types/chat";
 
 interface ChatScreenProps {
   onBack: () => void;
   appointmentId?: string;
 }
 
-export function ChatScreen({ onBack }: ChatScreenProps) {
-  const [message, setMessage] = React.useState("");
-  const [messages, setMessages] = React.useState([
-    { id: 1, sender: "technician", text: "Olá! Recebi sua solicitação de serviço. Posso confirmar que estarei aí amanhã às 15:00.", timestamp: "14:30" },
-    { id: 2, sender: "user", text: "Perfeito! Você pode trazer uma tela nova caso precise trocar?", timestamp: "14:32" },
-    { id: 3, sender: "technician", text: "Sim, tenho telas originais em estoque. Vou levar algumas opções.", timestamp: "14:33" },
-    { id: 4, sender: "user", text: "Ótimo! Muito obrigada.", timestamp: "14:34" },
-    { id: 5, sender: "technician", text: "Por nada! Qualquer dúvida estou à disposição. Até amanhã! 👍", timestamp: "14:35" },
-  ]);
-
+export function ChatScreen({ onBack, appointmentId }: ChatScreenProps) {
+  const [input, setInput] = React.useState("");
+  const [messages, setMessages] = React.useState<Message[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const currentUser = getStoredUser();
 
+  // Carrega mensagens e marca como lidas
+  React.useEffect(() => {
+    if (!appointmentId) { setLoading(false); return; }
+    getMessages(appointmentId)
+      .then((data) => { setMessages(data); markAsRead(appointmentId).catch(() => {}); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [appointmentId]);
+
+  // Scroll para última mensagem
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (message.trim()) {
-      setMessages([...messages, {
-        id: messages.length + 1,
-        sender: "user",
-        text: message,
-        timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      }]);
-      setMessage("");
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const text = input.trim();
+    setInput("");
+
+    // Otimista: adiciona mensagem localmente enquanto envia
+    const tempMsg: Message = {
+      id: `temp-${Date.now()}`,
+      appointmentId: appointmentId ?? "",
+      senderId: currentUser?.id ?? "user",
+      senderRole: "user",
+      content: text,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, tempMsg]);
+
+    if (appointmentId) {
+      try {
+        const saved = await sendMessage(appointmentId, text);
+        setMessages((prev) => prev.map((m) => m.id === tempMsg.id ? saved : m));
+      } catch {
+        // mantém a mensagem otimista mesmo em caso de erro
+      }
     }
   };
 
-  const technician = { name: "Carlos Silva", status: "online", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos" };
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  const technician = { name: "Técnico", status: "online", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=tech" };
 
   return (
     <div className="min-h-screen bg-[rgb(var(--color-background))] flex flex-col">
@@ -62,14 +87,28 @@ export function ChatScreen({ onBack }: ChatScreenProps) {
         <div className="text-center">
           <div className="inline-block px-4 py-2 bg-white rounded-full shadow-sm text-[rgb(var(--color-text-muted))]">Hoje</div>
         </div>
-        {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${msg.sender === "user" ? "bg-[rgb(var(--color-primary))] text-white rounded-br-sm" : "bg-white text-[rgb(var(--color-text-primary))] shadow-sm rounded-bl-sm"}`}>
-              <p className="mb-1">{msg.text}</p>
-              <span className={msg.sender === "user" ? "text-white/70" : "text-[rgb(var(--color-text-muted))]"}>{msg.timestamp}</span>
+
+        {loading && (
+          <p className="text-center text-[rgb(var(--color-text-muted))]">Carregando mensagens...</p>
+        )}
+
+        {!loading && messages.length === 0 && (
+          <p className="text-center text-[rgb(var(--color-text-muted))]">Nenhuma mensagem ainda.</p>
+        )}
+
+        {messages.map((msg) => {
+          const isUser = msg.senderRole === "user";
+          return (
+            <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[75%] rounded-2xl px-4 py-3 ${isUser ? "bg-[rgb(var(--color-primary))] text-white rounded-br-sm" : "bg-white text-[rgb(var(--color-text-primary))] shadow-sm rounded-bl-sm"}`}>
+                <p className="mb-1">{msg.content}</p>
+                <span className={isUser ? "text-white/70" : "text-[rgb(var(--color-text-muted))]"}>
+                  {formatTime(msg.createdAt)}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -79,18 +118,14 @@ export function ChatScreen({ onBack }: ChatScreenProps) {
           <button className="w-10 h-10 rounded-full bg-[rgb(var(--color-background))] flex items-center justify-center"><ImageIcon className="w-5 h-5 text-[rgb(var(--color-primary))]" /></button>
           <input
             type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                handleSend()
-              }
-            }}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSend(); } }}
             placeholder="Digite uma mensagem..."
             className="flex-1 px-4 py-3 bg-[rgb(var(--color-background))] rounded-full focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary))]"
           />
-          <button onClick={handleSend} disabled={!message.trim()} className="w-12 h-12 rounded-full bg-[rgb(var(--color-primary))] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={handleSend} disabled={!input.trim()}
+            className="w-12 h-12 rounded-full bg-[rgb(var(--color-primary))] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
             <Send className="w-5 h-5 text-white" />
           </button>
         </div>
