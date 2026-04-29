@@ -1,6 +1,7 @@
 import * as React from "react";
 import { X, Star } from "lucide-react";
 import { useOrder } from "../contexts/OrderContext";
+import { createRating } from "../services/ratingService";
 
 interface RatingModalProps {
   orderId: string;
@@ -14,79 +15,68 @@ export function RatingModal({ orderId, technicianName, onClose, onSubmit }: Rati
   const [rating, setRating] = React.useState(0);
   const [hoveredRating, setHoveredRating] = React.useState(0);
   const [comment, setComment] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (rating === 0) {
       alert("Por favor, selecione uma avaliação");
       return;
     }
+    setLoading(true);
+    setError("");
+    try {
+      await createRating({ appointmentId: orderId, score: rating, comment: comment || undefined });
+      evaluateOrder(orderId, rating, comment);
+      onSubmit();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao enviar avaliação.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    evaluateOrder(orderId, rating, comment);
-    onSubmit();
+  const ratingLabel: Record<number, string> = {
+    1: "Ruim", 2: "Regular", 3: "Bom", 4: "Muito bom!", 5: "Excelente!",
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[rgb(var(--color-border))]">
           <h3 className="text-[rgb(var(--color-secondary))]">Avaliar Serviço</h3>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-[rgb(var(--color-background))] flex items-center justify-center transition-colors"
-          >
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-[rgb(var(--color-background))] flex items-center justify-center transition-colors">
             <X className="w-5 h-5 text-[rgb(var(--color-text-secondary))]" />
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6">
           <div className="text-center mb-6">
-            <p className="text-[rgb(var(--color-text-secondary))] mb-1">
-              Como foi o atendimento de
-            </p>
+            <p className="text-[rgb(var(--color-text-secondary))] mb-1">Como foi o atendimento de</p>
             <h4 className="text-[rgb(var(--color-text-primary))]">{technicianName}?</h4>
           </div>
 
-          {/* Stars */}
           <div className="flex justify-center gap-2 mb-6">
             {[1, 2, 3, 4, 5].map((value) => (
-              <button
-                key={value}
-                onClick={() => setRating(value)}
+              <button key={value} onClick={() => setRating(value)}
                 onMouseEnter={() => setHoveredRating(value)}
                 onMouseLeave={() => setHoveredRating(0)}
-                className="transition-transform hover:scale-110"
-              >
-                <Star
-                  className={`w-10 h-10 ${
-                    value <= (hoveredRating || rating)
-                      ? "fill-[rgb(var(--color-warning))] text-[rgb(var(--color-warning))]"
-                      : "text-[rgb(var(--color-border))]"
-                  }`}
-                />
+                className="transition-transform hover:scale-110">
+                <Star className={`w-10 h-10 ${value <= (hoveredRating || rating) ? "fill-[rgb(var(--color-warning))] text-[rgb(var(--color-warning))]" : "text-[rgb(var(--color-border))]"}`} />
               </button>
             ))}
           </div>
 
-          {/* Rating Label */}
           {rating > 0 && (
             <div className="text-center mb-6">
-              <p className="text-[rgb(var(--color-primary))]">
-                {rating === 5 && "Excelente!"}
-                {rating === 4 && "Muito bom!"}
-                {rating === 3 && "Bom"}
-                {rating === 2 && "Regular"}
-                {rating === 1 && "Ruim"}
-              </p>
+              <p className="text-[rgb(var(--color-primary))]">{ratingLabel[rating]}</p>
             </div>
           )}
 
-          {/* Comment */}
+          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+
           <div className="mb-6">
-            <label className="block text-[rgb(var(--color-text-secondary))] mb-2">
-              Comentário (opcional)
-            </label>
+            <label className="block text-[rgb(var(--color-text-secondary))] mb-2">Comentário (opcional)</label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
@@ -96,20 +86,14 @@ export function RatingModal({ orderId, technicianName, onClose, onSubmit }: Rati
             />
           </div>
 
-          {/* Buttons */}
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={onClose}
-              className="px-6 py-3 rounded-xl border-2 border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-background))] transition-colors"
-            >
+            <button onClick={onClose}
+              className="px-6 py-3 rounded-xl border-2 border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-background))] transition-colors">
               Cancelar
             </button>
-            <button
-              onClick={handleSubmit}
-              disabled={rating === 0}
-              className="px-6 py-3 rounded-xl bg-[rgb(var(--color-primary))] text-white hover:bg-[rgb(var(--color-primary-dark))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Enviar
+            <button onClick={handleSubmit} disabled={rating === 0 || loading}
+              className="px-6 py-3 rounded-xl bg-[rgb(var(--color-primary))] text-white hover:bg-[rgb(var(--color-primary-dark))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? "Enviando..." : "Enviar"}
             </button>
           </div>
         </div>
