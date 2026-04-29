@@ -89,12 +89,18 @@
 │   │   ├── main.tsx
 │   │   ├── services
 │   │   │   ├── api.ts
+│   │   │   ├── appointments.ts
 │   │   │   ├── auth.ts
+│   │   │   ├── chatService.ts
+│   │   │   ├── ratingService.ts
 │   │   │   └── technicians.ts
 │   │   ├── SISTEMA_ESTADOS.md
 │   │   ├── styles
 │   │   │   └── globals.css
 │   │   └── types
+│   │       ├── appointment.ts
+│   │       ├── chat.ts
+│   │       ├── rating.ts
 │   │       ├── technician.ts
 │   │       └── user.ts
 │   ├── tsconfig.json
@@ -120,7 +126,7 @@
 │       ├── models
 │       │   ├── Appointment.js
 │       │   ├── Chat.js
-│       │   ├── Index.js
+│       │   ├── index.js
 │       │   ├── Message.js
 │       │   ├── Rating.js
 │       │   ├── Service.js
@@ -152,4 +158,4 @@
 ├── package-lock.json
 └── README.md
 
-21 directories, 132 files
+21 directories, 138 files
