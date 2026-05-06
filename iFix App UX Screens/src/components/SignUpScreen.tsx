@@ -16,7 +16,7 @@ export function SignUpScreen({ onBack, onSignUp }: SignUpScreenProps) {
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
