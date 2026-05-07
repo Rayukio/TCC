@@ -10,28 +10,40 @@ interface BookingScreenProps {
   technicianId?: string;
 }
 
+// Gera os próximos 5 dias a partir de hoje com data real
+function getAvailableDates() {
+  const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  const result = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    result.push({
+      day: i === 0 ? "Hoje" : i === 1 ? "Amanhã" : days[d.getDay()],
+      date: `${String(d.getDate()).padStart(2, "0")}/${months[d.getMonth()]}`,
+      iso: d.toISOString(),
+      available: d.getDay() !== 0, // domingo indisponível
+    });
+  }
+  return result;
+}
+
 export function BookingScreen({ onBack, onConfirm, technicianId }: BookingScreenProps) {
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
   const [selectedTime, setSelectedTime] = React.useState<string | null>(null);
   const [selectedService, setSelectedService] = React.useState<string | null>(null);
-  const [address, setAddress] = React.useState("Rua Exemplo, 123 - São Paulo");
+  const [address] = React.useState("Rua Exemplo, 123 - São Paulo");
   const [location, setLocation] = React.useState("home");
   const [technician, setTechnician] = React.useState<Technician | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
 
+  const availableDates = React.useMemo(() => getAvailableDates(), []);
+
   React.useEffect(() => {
     if (!technicianId) return;
     getTechnicianById(technicianId).then(setTechnician).catch(() => {});
   }, [technicianId]);
-
-  const availableDates = [
-    { day: "Hoje", date: "25/11", iso: new Date().toISOString(), available: true },
-    { day: "Amanhã", date: "26/11", iso: new Date(Date.now() + 86400000).toISOString(), available: true },
-    { day: "Qui", date: "27/11", iso: new Date(Date.now() + 2 * 86400000).toISOString(), available: true },
-    { day: "Sex", date: "28/11", iso: new Date(Date.now() + 3 * 86400000).toISOString(), available: true },
-    { day: "Sáb", date: "29/11", iso: new Date(Date.now() + 4 * 86400000).toISOString(), available: false },
-  ];
 
   const availableTimes = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
 
@@ -85,7 +97,11 @@ export function BookingScreen({ onBack, onConfirm, technicianId }: BookingScreen
       </div>
 
       <div className="px-6 py-6">
-        {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
 
         <div className="mb-6">
           <h3 className="text-[rgb(var(--color-secondary))] mb-3">Escolha o serviço</h3>
