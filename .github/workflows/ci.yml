@@ -27,6 +27,8 @@ jobs:
 
       - name: Instalar dependências
         run: npm install
+        working-directory: ./iFix App UX Screens
 
       - name: Executar build
         run: npm run build
+        working-directory: ./iFix App UX Screens
