@@ -127,7 +127,7 @@ export default function App() {
           />
         );
       case "profile":
-        return <ProfileScreen onBack={() => setCurrentScreen("home")} />;
+        return <ProfileScreen onBack={() => setCurrentScreen("home")} onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
       default:
         return <HomeScreen onNavigate={(screen) => setCurrentScreen(screen as Screen)} />;
     }
