@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { SignUpScreen } from "./components/SignUpScreen";
 import { HomeScreen } from "./components/HomeScreen";
@@ -164,6 +165,11 @@ export default function App() {
       };
     }, [updateMetricsOnStateChange, applyRating]);
 
-    return <div className="min-h-screen">{renderScreen()}</div>;
+    return (
+      <div className="min-h-screen">
+        {renderScreen()}
+        <Analytics />
+      </div>
+    );
   }
 }
