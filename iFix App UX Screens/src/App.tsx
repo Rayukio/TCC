@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { SignUpScreen } from "./components/SignUpScreen";
 import { HomeScreen } from "./components/HomeScreen";
@@ -137,6 +138,7 @@ export default function App() {
     <ReputationProvider>
       <OrderProvider>
         <AppContent />
+        <Analytics />
       </OrderProvider>
     </ReputationProvider>
   );
